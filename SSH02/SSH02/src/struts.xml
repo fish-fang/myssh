@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE struts PUBLIC "-//Apache Software Foundation//DTD Struts Configuration 2.1//EN" "http://struts.apache.org/dtds/struts-2.1.dtd">
+<struts>
+	<include file="struts-default.xml" />
+	<constant name="struts.devMode" value="true" />
+	
+	<package name="struts2" extends="struts-default" namespace="/">
+		<global-results>
+			<result name="login">/login.jsp</result>
+		</global-results>
+		<global-exception-mappings>
+			<exception-mapping result="login"
+				exception="org.login.common.NoAccessException" />
+		</global-exception-mappings>
+		<action name="login" class="login">
+			<result name="success">/success.jsp</result>
+			<result name="input">/login.jsp</result>
+		</action>
+		<action name="show" class="login" method="findAllUsers">
+			<result name="success">/list.jsp</result>
+			<result name="error">/error.jsp</result>
+		</action>
+		<action name="save" class="login" method="save">
+			<result name="success">/success.jsp</result>
+			<result name="error">/error.jsp</result>
+		</action>
+		<action name="update" class="login" method="update">
+			<result name="success">/success.jsp</result>
+			<result name="update">/update.jsp</result>
+			<result name="error">/error.jsp</result>
+		</action>
+		<action name="delete" class="login" method="delete">
+			<result name="success">/success.jsp</result>
+			<result name="error">/error.jsp</result>
+		</action>
+		<action name="workflow" class="workflow" method="workflow">
+			<result name="success">/monitor.jsp</result>
+			<result name="error">/error.jsp</result>
+		</action>
+	</package>
+	<package name="default" namespace="/jasons" extends="json-default">
+        <action name="jsondelete" class="deleteUser" method="delete">
+            <result type="json">
+            <param name="root">result</param>
+            </result>       
+        </action>
+        <action name="addUserSearcher" class="addUserSearch" method="addUserSearch">
+            <result type="json">
+            <param name="root">result</param>
+            </result>       
+        </action>
+        <action name="uploadImg" class="uploadImg" method="uploadImg">
+            <result type="json">
+            <param name="root">result</param>
+            </result>       
+        </action>
+	</package>
+</struts>    

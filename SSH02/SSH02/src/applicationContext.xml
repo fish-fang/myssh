@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans
+	xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:p="http://www.springframework.org/schema/p"
+	xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:aop="http://www.springframework.org/schema/aop"
+	xmlns:tx="http://www.springframework.org/schema/tx"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans 
+			http://www.springframework.org/schema/beans/spring-beans-3.0.xsd
+			http://www.springframework.org/schema/context
+			http://www.springframework.org/schema/context/spring-context-3.0.xsd
+			http://www.springframework.org/schema/aop 
+			http://www.springframework.org/schema/aop/spring-aop-3.0.xsd
+			http://www.springframework.org/schema/tx 
+			http://www.springframework.org/schema/tx/spring-tx-3.0.xsd">
+
+	<context:annotation-config />
+	<bean id="dataSource"
+		class="org.apache.commons.dbcp.BasicDataSource">
+		<property name="driverClassName"
+			value="oracle.jdbc.driver.OracleDriver">
+		</property>
+		<property name="url"
+			value="jdbc:oracle:thin:@localhost:1521:orcl">
+		</property>
+		<property name="username" value="scott"></property>
+		<property name="password" value="123456"></property>
+	</bean>
+	<bean id="sessionFactory"
+		class="org.springframework.orm.hibernate3.annotation.AnnotationSessionFactoryBean">
+		<property name="dataSource">
+			<ref bean="dataSource" />
+		</property>
+		<property name="annotatedClasses">
+            <list>
+                <value>org.login.vo.Users</value>
+            </list>
+        </property>
+		<property name="hibernateProperties">
+			<props>
+				<prop key="hibernate.dialect">
+					org.hibernate.dialect.Oracle9Dialect
+				</prop>
+				<prop key="hibernate.show_sql">true</prop>
+			</props>
+		</property>	
+	</bean>
+		<!-- 声明一个 Hibernate 3 的 事务管理器供代理类自动管理事务用-->
+	<bean id="transactionManager"
+		class="org.springframework.orm.hibernate3.HibernateTransactionManager">
+		<property name="sessionFactory" ref="sessionFactory" />
+	</bean>
+		<bean id="logAdvisor" class="org.login.common.LogAdvisor"    
+    	p:loggerName="aoplog" /> 
+    <bean id="accessAdvisorBean" class="org.login.common.AccessAdvisor"/>   
+	<aop:config proxy-target-class="true">
+	    <!-- 切入点指明了在执行org.login.dao包中的所有方法时产生事务拦截操作 -->
+		<aop:pointcut id="daoMethods"
+			expression="execution(* org.login.*.*(..))" />
+		<aop:pointcut id="logOperatePoint"    
+        	expression="@annotation(org.login.common.LogOperationAnnotation)" /> 
+		<aop:pointcut id="accessPoint"    
+        	expression="@annotation(org.login.common.AccessAnotation)" /> 
+       <!-- 定义了将采用何种拦截操作，这里引用到 txAdvice -->
+		<aop:advisor advice-ref="txAdvice" pointcut-ref="daoMethods" />   
+    	<aop:advisor pointcut-ref="logOperatePoint" id="logOperateAdvisor"    
+        	advice-ref="logAdvisor" />  
+        <aop:advisor pointcut-ref="accessPoint" id="accAdvisor"    
+        	advice-ref="accessAdvisorBean" />
+	</aop:config>
+	<tx:annotation-driven transaction-manager="transactionManager" />
+    
+	<tx:advice id="txAdvice" transaction-manager="transactionManager">
+		<tx:attributes>
+			<tx:method name="save*" propagation="REQUIRED" />
+			<tx:method name="delete*" propagation="REQUIRED" />
+			<tx:method name="update*" propagation="REQUIRED" />
+			<tx:method name="*" read-only="true" propagation="NOT_SUPPORTED" />
+		</tx:attributes>
+	</tx:advice>
+	<context:component-scan base-package="org.login" />
+	</beans>
